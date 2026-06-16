@@ -1,4 +1,6 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace MyBird
 {
@@ -20,7 +22,7 @@ namespace MyBird
 
         [Header("Movement")]
         // 오른쪽으로 이동하는 속도 (유닛/초)
-        public float moveSpeed = 2f;
+        public float moveSpeed = 5f;
 
         [Header("State")]
         // 게임 시작 전 대기 상태인지 여부
@@ -31,6 +33,9 @@ namespace MyBird
         Rigidbody2D rb;
         bool isDead = false;
 
+        public GameObject readyUI;
+        public GameObject gameOverUI;
+
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -38,30 +43,13 @@ namespace MyBird
             {
                 Debug.LogError("Player requires a Rigidbody2D component.");
             }
-        }
-
-        void Update()
-        {
-            // 입력: 스페이스바 또는 마우스 왼쪽 버튼
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            {
-                // 대기 상태라면 플레이 상태로 전환하고 첫 점프를 수행
-                if (!isPlaying)
-                {
-                    isPlaying = true;
-                    Jump();
-                }
-                else
-                {
-                    Jump();
-                }
-            }
+            gameOverUI.SetActive(false);
         }
 
         void FixedUpdate()
         {
             if (rb == null) return;
-
+            if (isDead) return;
             if (isPlaying)
             {
                 // 플레이 중일 때만 오른쪽으로 이동
@@ -100,6 +88,7 @@ namespace MyBird
                 {
                     GameManager.Instance.GameOver();
                 }
+                gameOverUI.SetActive(true);
             }
         }
 
@@ -132,6 +121,26 @@ namespace MyBird
 
             float angle = Mathf.Lerp(current, target, Time.fixedDeltaTime * rotationSpeed);
             transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        }
+
+        public void OnJump(InputAction.CallbackContext context)
+        {
+            if (isDead) return;
+
+            if (context.performed)
+            {
+                // 대기 상태라면 플레이 상태로 전환하고 첫 점프를 수행
+                if (!isPlaying)
+                {
+                    readyUI.SetActive(false);
+                    GameManager.Instance.StartGame();
+                    Jump();
+                }
+                else
+                {
+                    Jump();
+                }
+            }
         }
     }
 }

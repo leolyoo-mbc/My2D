@@ -24,20 +24,11 @@ namespace MyBird
         // 난이도 계수: 값이 클수록 더 자주 생성 (기본 1)
         public float difficulty = 1f;
 
-        [Header("Behavior")]
-        // 씬 시작 시 자동으로 스폰을 시작할지 여부
-        public bool autoStart = true;
-
         Coroutine spawnRoutine;
 
         void Start()
         {
             if (spawnPoint == null) spawnPoint = transform;
-
-            if (autoStart)
-            {
-                StartSpawning();
-            }
         }
 
         public void StartSpawning()

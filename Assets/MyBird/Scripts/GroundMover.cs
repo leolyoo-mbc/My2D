@@ -6,7 +6,7 @@ namespace MyBird
     {
         [Header("Scroll")]
         // 왼쪽으로 스크롤되는 속도 (유닛/초)
-        public float scrollSpeed = 2f;
+        public float scrollSpeed = 5f;
 
         // 자식으로 배치된 그라운드 조각들을 자동으로 수집하여 루핑 처리
         Transform[] pieces;
@@ -48,6 +48,7 @@ namespace MyBird
 
         void Update()
         {
+            if (!GameManager.Instance.player.isPlaying) return;
             if (pieces == null || pieces.Length == 0) return;
 
             float dx = scrollSpeed * Time.deltaTime;

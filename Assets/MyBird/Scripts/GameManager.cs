@@ -47,11 +47,11 @@ namespace MyBird
             {
                 player.isPlaying = false;
                 // 선택적으로 플레이어 물리도 멈춤
-                if (player.GetComponent<Rigidbody2D>() is Rigidbody2D prb)
-                {
-                    prb.linearVelocity = Vector2.zero;
-                    prb.bodyType = RigidbodyType2D.Static;
-                }
+                //if (player.GetComponent<Rigidbody2D>() is Rigidbody2D prb)
+                //{
+                //    prb.linearVelocity = Vector2.zero;
+                //    prb.bodyType = RigidbodyType2D.Static;
+                //}
             }
 
             // 파이프 스폰 중지
@@ -66,6 +66,20 @@ namespace MyBird
             if (IsGameOver) return;
             Score += amount;
             Debug.Log($"GameManager: Score = {Score}");
+        }
+
+        public void StartGame()
+        {
+            if (IsGameOver) return;
+
+            // 플레이어 상태 활성화
+            player.isPlaying = true;
+
+            // 파이프 스폰 시작 명령
+            if (pipeSpawner != null)
+            {
+                pipeSpawner.StartSpawning();
+            }
         }
     }
 }
