@@ -42,18 +42,6 @@ namespace MyBird
 
             Debug.Log("GameManager: GameOver triggered.");
 
-            // 멈출 동작: 플레이어 앞으로 이동 중지
-            if (player != null)
-            {
-                player.isPlaying = false;
-                // 선택적으로 플레이어 물리도 멈춤
-                //if (player.GetComponent<Rigidbody2D>() is Rigidbody2D prb)
-                //{
-                //    prb.linearVelocity = Vector2.zero;
-                //    prb.bodyType = RigidbodyType2D.Static;
-                //}
-            }
-
             // 파이프 스폰 중지
             if (pipeSpawner != null)
             {
@@ -71,9 +59,6 @@ namespace MyBird
         public void StartGame()
         {
             if (IsGameOver) return;
-
-            // 플레이어 상태 활성화
-            player.isPlaying = true;
 
             // 파이프 스폰 시작 명령
             if (pipeSpawner != null)

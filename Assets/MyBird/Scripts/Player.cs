@@ -1,107 +1,107 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace MyBird
 {
+    [RequireComponent(typeof(Rigidbody2D))]
     public class Player : MonoBehaviour
     {
+        private enum State { Ready, Playing, Dead }
+
+        Rigidbody2D rb;
+
         [Header("Jump")]
-        public float jumpVelocity = 5f;
+        [SerializeField] private float jumpVelocity = 5f;
+
+        [Header("Movement")]
+        // 오른쪽으로 이동하는 속도 (유닛/초)
+        [SerializeField] private float moveSpeed = 5f;
+        [SerializeField] private float defaultGravityScale;
 
         [Header("Rotation")]
         // When moving up, rotate toward this angle (degrees)
         public float maxUpAngle = 30f;
         // When falling, rotate toward this angle (degrees)
         public float maxDownAngle = -90f;
-        // Expected vertical speeds used to map velocity -> angle
-        public float maxRiseSpeed = 5f;
-        public float maxFallSpeed = -5f;
+        // 고개를 최대로 꺾기 위한 기준 속도 (물리 이동 속도 제한 아님)
+        public float speedForMaxUpAngle = 5f;
+        public float speedForMaxDownAngle = -5f;
         // How fast the bird rotates to the target angle
         public float rotationSpeed = 5f;
 
-        [Header("Movement")]
-        // 오른쪽으로 이동하는 속도 (유닛/초)
-        public float moveSpeed = 5f;
-
         [Header("State")]
-        // 게임 시작 전 대기 상태인지 여부
-        public bool isPlaying = false;
-        // 대기 중에 아래로 떨어질 때마다 받는 위쪽 힘
-        public float hoverForce = 10f;
+        [SerializeField] private State currentState = State.Ready;
 
-        Rigidbody2D rb;
-        bool isDead = false;
-
-        public GameObject readyUI;
-        public GameObject gameOverUI;
+        [SerializeField] private GameObject readyUI;
+        [SerializeField] private GameObject gameOverUI;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
-            if (rb == null)
-            {
-                Debug.LogError("Player requires a Rigidbody2D component.");
-            }
+            defaultGravityScale = rb.gravityScale;
+            rb.gravityScale = 0f;
+        }
+
+        private void Start()
+        {
             gameOverUI.SetActive(false);
         }
 
         void FixedUpdate()
         {
-            if (rb == null) return;
-            if (isDead) return;
-            if (isPlaying)
+            switch (currentState)
             {
-                // 플레이 중일 때만 오른쪽으로 이동
-                transform.Translate(moveSpeed * Time.fixedDeltaTime * Vector2.right, Space.World);
+                case State.Ready:
+                    break;
+                case State.Playing:
+                    rb.linearVelocityX = moveSpeed;
+                    ApplyRotation();
+                    break;
+                case State.Dead:
+                    break;
             }
-            else
-            {
-                // 대기 상태: 아래로 떨어질 때만 아래에서 위로 지속적인 힘을 줘서 제자리에 뜨게 함
-                if (rb.linearVelocity.y < 0f)
-                {
-                    rb.AddForce(Vector2.up * hoverForce);
-                }
-            }
-
-            ApplyRotation();
-        }
-
-        void Jump()
-        {
-            if (rb == null) return;
-            if (isDead) return;
-
-            // Rigidbody2D velocity를 직접 설정하여 즉시 위로 점프시킴
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
         }
 
         void OnCollisionEnter2D(Collision2D collision)
         {
-            if (isDead) return;
-
-            if (collision.collider != null && collision.collider.CompareTag("Pipe"))
+            switch (currentState)
             {
-                isDead = true;
-                // 게임 매니저에 게임오버 알림
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.GameOver();
-                }
-                gameOverUI.SetActive(true);
+                case State.Ready:
+                    break;
+                case State.Playing:
+                    if (collision.collider != null && collision.collider.CompareTag("Pipe"))
+                    {
+                        currentState = State.Dead;
+                        // 게임 매니저에 게임오버 알림
+                        if (GameManager.Instance != null)
+                        {
+                            GameManager.Instance.GameOver();
+                        }
+                        gameOverUI.SetActive(true);
+                    }
+                    break;
+                case State.Dead:
+                    break;
             }
         }
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (isDead) return;
-
-            if (other != null && other.CompareTag("Point"))
+            switch (currentState)
             {
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.AddPoint(1);
-                }
+                case State.Ready:
+                    break;
+                case State.Playing:
+                    if (other != null && other.CompareTag("Point"))
+                    {
+                        if (GameManager.Instance != null)
+                        {
+                            GameManager.Instance.AddPoint(1);
+                        }
+                    }
+                    break;
+                case State.Dead:
+                    break;
             }
         }
 
@@ -109,11 +109,17 @@ namespace MyBird
         {
             if (rb == null) return;
 
-            // rb.linearVelocity.y 값을 maxFallSpeed..maxRiseSpeed 범위로 정규화
-            float v = rb.linearVelocity.y;
-            float t = Mathf.InverseLerp(maxFallSpeed, maxRiseSpeed, v);
+            // 물리적인 속도가 기준 속도에 도달했을 때의 비율(0.0 ~ 1.0)을 구함
+            float normalizedVelocity = Mathf.InverseLerp(speedForMaxDownAngle, speedForMaxUpAngle, rb.linearVelocityY);
 
-            float target = Mathf.Lerp(maxDownAngle, maxUpAngle, t);
+            // 각도 중에 더 절댓값이 큰 값의 각도를 기준으로 대칭(Max Magnitude) 설정
+            float maxAngleMagnitude = maxDownAngle + maxUpAngle < 0 ? Mathf.Abs(maxDownAngle) : Mathf.Abs(maxUpAngle);
+
+            // 속도가 0일 때 0도를 바라보도록 대칭 계산
+            float target = Mathf.Lerp(-maxAngleMagnitude, maxAngleMagnitude, normalizedVelocity);
+
+            // 최종 계산된 각도가 기존 설정한 한계치(-90도 ~ 30도)를 벗어나지 않게 제한
+            target = Mathf.Clamp(target, maxDownAngle, maxUpAngle);
 
             // 현재 z 각도는 0..360이므로 -180..180 범위로 변환
             float current = transform.eulerAngles.z;
@@ -125,21 +131,20 @@ namespace MyBird
 
         public void OnJump(InputAction.CallbackContext context)
         {
-            if (isDead) return;
-
-            if (context.performed)
+            switch (currentState)
             {
-                // 대기 상태라면 플레이 상태로 전환하고 첫 점프를 수행
-                if (!isPlaying)
-                {
+                case State.Ready:
+                    currentState = State.Playing;
+                    rb.gravityScale = defaultGravityScale;
                     readyUI.SetActive(false);
                     GameManager.Instance.StartGame();
-                    Jump();
-                }
-                else
-                {
-                    Jump();
-                }
+                    rb.linearVelocityY = jumpVelocity;
+                    break;
+                case State.Playing:
+                    rb.linearVelocityY = jumpVelocity;
+                    break;
+                case State.Dead:
+                    break;
             }
         }
     }

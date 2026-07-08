@@ -4,69 +4,57 @@ namespace MyBird
 {
     public class GroundMover : MonoBehaviour
     {
-        [Header("Scroll")]
-        // 왼쪽으로 스크롤되는 속도 (유닛/초)
+        [Header("Scroll Settings")]
         public float scrollSpeed = 5f;
 
-        // 자식으로 배치된 그라운드 조각들을 자동으로 수집하여 루핑 처리
-        Transform[] pieces;
-        float[] widths;
-        float totalWidth;
+        private Transform groundA;
+        private Transform groundB;
+        private float tileWidth = 1f;
 
         void Start()
         {
-            // 모든 직계 자식들을 그라운드 조각으로 간주
-            int count = transform.childCount;
-            pieces = new Transform[count];
-            widths = new float[count];
-
-            totalWidth = 0f;
-
-            for (int i = 0; i < count; i++)
+            // 이 방식은 바닥 조각이 딱 2개일 때 최적화된 로직입니다.
+            if (transform.childCount >= 2)
             {
-                var t = transform.GetChild(i);
-                pieces[i] = t;
+                groundA = transform.GetChild(0);
+                groundB = transform.GetChild(1);
 
-                // SpriteRenderer 또는 Renderer로 넓이 계산
-                float w = 0f;
-                if (t.TryGetComponent<SpriteRenderer>(out var sr))
+                // 첫 번째 조각의 너비를 측정 (SpriteRenderer 기준)
+                if (groundA.TryGetComponent<SpriteRenderer>(out var sr))
                 {
-                    w = sr.bounds.size.x;
+                    tileWidth = sr.bounds.size.x;
                 }
-                else
+                else if (groundA.TryGetComponent<Renderer>(out var r))
                 {
-                    if (t.TryGetComponent<Renderer>(out var r)) w = r.bounds.size.x;
+                    tileWidth = r.bounds.size.x;
                 }
-
-                // 너비를 못 구하면 기본값 1 사용
-                if (w <= 0f) w = 1f;
-
-                widths[i] = w;
-                totalWidth += w;
+            }
+            else
+            {
+                Debug.LogError("GroundMover: 이 로직은 자식(바닥) 오브젝트가 최소 2개 필요합니다!");
             }
         }
 
         void Update()
         {
-            if (!GameManager.Instance.player.isPlaying) return;
-            if (pieces == null || pieces.Length == 0) return;
+            if (groundA == null || groundB == null) return;
 
-            float dx = scrollSpeed * Time.deltaTime;
+            float moveDistance = scrollSpeed * Time.deltaTime;
 
-            // 각 조각을 왼쪽으로 이동시키고, 화면 왼쪽을 벗어나면 오른쪽 끝으로 옮겨 루핑
-            for (int i = 0; i < pieces.Length; i++)
+            // 1. 두 조각을 모두 왼쪽으로 이동
+            groundA.localPosition += Vector3.left * moveDistance;
+            groundB.localPosition += Vector3.left * moveDistance;
+
+            // 2. A가 화면 밖(-너비)으로 완전히 나가면, B의 바로 오른쪽 끝으로 순간이동
+            if (groundA.localPosition.x <= -tileWidth)
             {
-                var t = pieces[i];
-                Vector3 lp = t.localPosition;
-                lp.x -= dx;
+                groundA.localPosition = groundB.localPosition + new Vector3(tileWidth, 0, 0);
+            }
 
-                // 해당 조각이 자신의 너비만큼 왼쪽으로 벗어나면 totalWidth만큼 오른쪽으로 옮김
-                if (lp.x <= -widths[i])
-                {
-                    lp.x += totalWidth;
-                }
-
-                t.localPosition = lp;
+            // 3. B가 화면 밖으로 나가면, A의 바로 오른쪽 끝으로 순간이동
+            if (groundB.localPosition.x <= -tileWidth)
+            {
+                groundB.localPosition = groundA.localPosition + new Vector3(tileWidth, 0, 0);
             }
         }
     }
