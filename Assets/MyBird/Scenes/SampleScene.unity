@@ -268,7 +268,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 130392003}
-  - component: {fileID: 130392004}
   - component: {fileID: 130392005}
   m_Layer: 0
   m_Name: Ground
@@ -286,27 +285,14 @@ Transform:
   m_GameObject: {fileID: 130392002}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -6.4, z: 10}
+  m_LocalPosition: {x: 0, y: -6.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1183035987}
   - {fileID: 1137737795}
-  m_Father: {fileID: 519420032}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &130392004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 130392002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6cf5f76a9de4e840b58dc92e4ccc9c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GroundMover
-  scrollSpeed: 5
 --- !u!61 &130392005
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -583,14 +569,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyBird.Player
   jumpVelocity: 5
+  moveSpeed: 5
+  defaultGravityScale: 0
   maxUpAngle: 30
   maxDownAngle: -90
-  maxRiseSpeed: 5
-  maxFallSpeed: -5
+  speedForMaxUpAngle: 5
+  speedForMaxDownAngle: -5
   rotationSpeed: 5
-  moveSpeed: 5
-  isPlaying: 0
-  hoverForce: 20
+  currentState: 0
   readyUI: {fileID: 157820525}
   gameOverUI: {fileID: 88459889}
 --- !u!114 &205981543
@@ -992,7 +978,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 737077}
-  - {fileID: 130392003}
   - {fileID: 2091393607}
   - {fileID: 546365025}
   m_Father: {fileID: 0}
@@ -1064,7 +1049,6 @@ MonoBehaviour:
   minY: -0.5
   maxY: 3.5
   difficulty: 1
-  autoStart: 0
 --- !u!1 &558045273
 GameObject:
   m_ObjectHideFlags: 0
@@ -1261,6 +1245,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1137737795}
   - component: {fileID: 1137737796}
+  - component: {fileID: 1137737797}
   m_Layer: 0
   m_Name: ground_0 (1)
   m_TagString: Untagged
@@ -1342,6 +1327,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1137737797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137737794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6cf5f76a9de4e840b58dc92e4ccc9c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyBird.GroundMover
+  totalGroundCount: 2
 --- !u!1 &1183035986
 GameObject:
   m_ObjectHideFlags: 0
@@ -1352,6 +1350,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1183035987}
   - component: {fileID: 1183035988}
+  - component: {fileID: 1183035989}
   m_Layer: 0
   m_Name: ground_0
   m_TagString: Untagged
@@ -1433,6 +1432,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1183035989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183035986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6cf5f76a9de4e840b58dc92e4ccc9c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyBird.GroundMover
+  totalGroundCount: 2
 --- !u!1 &1356621133
 GameObject:
   m_ObjectHideFlags: 0
@@ -2026,3 +2038,4 @@ SceneRoots:
   - {fileID: 1628793135}
   - {fileID: 558045277}
   - {fileID: 463285344}
+  - {fileID: 130392003}

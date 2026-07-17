@@ -4,57 +4,43 @@ namespace MyBird
 {
     public class GroundMover : MonoBehaviour
     {
-        [Header("Scroll Settings")]
-        public float scrollSpeed = 5f;
+        [Tooltip("배치된 바닥 조각의 총 개수 (예: 2)")]
+        public int totalGroundCount = 2;
 
-        private Transform groundA;
-        private Transform groundB;
         private float tileWidth = 1f;
+        private Transform mainCamera;
+        private float recycleDistance;
 
         void Start()
         {
-            // 이 방식은 바닥 조각이 딱 2개일 때 최적화된 로직입니다.
-            if (transform.childCount >= 2)
-            {
-                groundA = transform.GetChild(0);
-                groundB = transform.GetChild(1);
+            mainCamera = Camera.main.transform;
+            Camera cam = Camera.main;
 
-                // 첫 번째 조각의 너비를 측정 (SpriteRenderer 기준)
-                if (groundA.TryGetComponent<SpriteRenderer>(out var sr))
-                {
-                    tileWidth = sr.bounds.size.x;
-                }
-                else if (groundA.TryGetComponent<Renderer>(out var r))
-                {
-                    tileWidth = r.bounds.size.x;
-                }
-            }
-            else
+            if (TryGetComponent<SpriteRenderer>(out var sr))
             {
-                Debug.LogError("GroundMover: 이 로직은 자식(바닥) 오브젝트가 최소 2개 필요합니다!");
+                tileWidth = sr.bounds.size.x;
             }
+            else if (TryGetComponent<Renderer>(out var r))
+            {
+                tileWidth = r.bounds.size.x;
+            }
+
+            // 카메라 화면의 가로 절반 길이 계산
+            float halfScreenWidth = cam.orthographicSize * cam.aspect;
+            
+            // 바닥 중심이 카메라 중심에서 '화면 절반 + 바닥 절반'보다 멀어지면 완전히 화면 밖임
+            recycleDistance = halfScreenWidth + (tileWidth / 2f);
         }
 
         void Update()
         {
-            if (groundA == null || groundB == null) return;
+            if (mainCamera == null) return;
 
-            float moveDistance = scrollSpeed * Time.deltaTime;
-
-            // 1. 두 조각을 모두 왼쪽으로 이동
-            groundA.localPosition += Vector3.left * moveDistance;
-            groundB.localPosition += Vector3.left * moveDistance;
-
-            // 2. A가 화면 밖(-너비)으로 완전히 나가면, B의 바로 오른쪽 끝으로 순간이동
-            if (groundA.localPosition.x <= -tileWidth)
+            // 카메라가 바닥보다 오른쪽으로 지정된 거리(recycleDistance) 이상 진행했다면
+            if (mainCamera.position.x - transform.position.x > recycleDistance)
             {
-                groundA.localPosition = groundB.localPosition + new Vector3(tileWidth, 0, 0);
-            }
-
-            // 3. B가 화면 밖으로 나가면, A의 바로 오른쪽 끝으로 순간이동
-            if (groundB.localPosition.x <= -tileWidth)
-            {
-                groundB.localPosition = groundA.localPosition + new Vector3(tileWidth, 0, 0);
+                // 맨 앞으로 이동 (현재 위치 + 바닥 너비 * 전체 개수)
+                transform.position += new Vector3(tileWidth * totalGroundCount, 0, 0);
             }
         }
     }
