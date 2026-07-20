@@ -6,7 +6,7 @@ namespace MyBird
     [RequireComponent(typeof(Rigidbody2D))]
     public class Player : MonoBehaviour
     {
-        private enum State { Ready, Playing, Dead }
+        public enum State { Ready, Playing, Dead }
 
         Rigidbody2D rb;
 
@@ -32,19 +32,16 @@ namespace MyBird
         [Header("State")]
         [SerializeField] private State currentState = State.Ready;
 
-        [SerializeField] private GameObject readyUI;
-        [SerializeField] private GameObject gameOverUI;
+        public State CurrentState { get => currentState; }
+
+        //[SerializeField] private GameObject readyUI;
+        //[SerializeField] private GameObject gameOverUI;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             defaultGravityScale = rb.gravityScale;
             rb.gravityScale = 0f;
-        }
-
-        private void Start()
-        {
-            gameOverUI.SetActive(false);
         }
 
         void FixedUpdate()
@@ -72,32 +69,6 @@ namespace MyBird
                     if (collision.collider != null && collision.collider.CompareTag("Pipe"))
                     {
                         currentState = State.Dead;
-                        // 게임 매니저에 게임오버 알림
-                        if (GameManager.Instance != null)
-                        {
-                            GameManager.Instance.GameOver();
-                        }
-                        gameOverUI.SetActive(true);
-                    }
-                    break;
-                case State.Dead:
-                    break;
-            }
-        }
-
-        void OnTriggerEnter2D(Collider2D other)
-        {
-            switch (currentState)
-            {
-                case State.Ready:
-                    break;
-                case State.Playing:
-                    if (other != null && other.CompareTag("Point"))
-                    {
-                        if (GameManager.Instance != null)
-                        {
-                            GameManager.Instance.AddPoint(1);
-                        }
                     }
                     break;
                 case State.Dead:
@@ -136,8 +107,6 @@ namespace MyBird
                 case State.Ready:
                     currentState = State.Playing;
                     rb.gravityScale = defaultGravityScale;
-                    readyUI.SetActive(false);
-                    GameManager.Instance.StartGame();
                     rb.linearVelocityY = jumpVelocity;
                     break;
                 case State.Playing:

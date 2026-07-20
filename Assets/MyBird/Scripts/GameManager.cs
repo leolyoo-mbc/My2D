@@ -7,11 +7,12 @@ namespace MyBird
         public static GameManager Instance { get; private set; }
 
         [Header("References")]
-        public Player player;
         public PipeSpawner pipeSpawner;
 
-        public bool IsGameOver { get; private set; }
+        [SerializeField] private bool isGameOver = false;
         public int Score { get; private set; }
+
+        [SerializeField] private Player player;
 
         void Awake()
         {
@@ -25,46 +26,37 @@ namespace MyBird
 
         void Start()
         {
-            if (player == null)
-            {
-                player = FindFirstObjectByType<Player>();
-            }
             if (pipeSpawner == null)
             {
                 pipeSpawner = FindFirstObjectByType<PipeSpawner>();
             }
         }
 
-        public void GameOver()
+        private void Update()
         {
-            if (IsGameOver) return;
-            IsGameOver = true;
+            if (isGameOver) return;
 
-            Debug.Log("GameManager: GameOver triggered.");
-
-            // 파이프 스폰 중지
-            if (pipeSpawner != null)
+            switch (player.CurrentState)
             {
-                pipeSpawner.StopSpawning();
+                case Player.State.Ready:
+                    break;
+                case Player.State.Playing:
+                    if (pipeSpawner != null) pipeSpawner.StartSpawning();
+                    break;
+                case Player.State.Dead:
+                    isGameOver = true;
+                    Debug.Log("GameManager: GameOver triggered.");
+                    // 파이프 스폰 중지
+                    if (pipeSpawner != null) pipeSpawner.StopSpawning();
+                    break;
             }
         }
 
         public void AddPoint(int amount = 1)
         {
-            if (IsGameOver) return;
+            if (isGameOver) return;
             Score += amount;
             Debug.Log($"GameManager: Score = {Score}");
-        }
-
-        public void StartGame()
-        {
-            if (IsGameOver) return;
-
-            // 파이프 스폰 시작 명령
-            if (pipeSpawner != null)
-            {
-                pipeSpawner.StartSpawning();
-            }
         }
     }
 }

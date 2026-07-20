@@ -36,11 +36,17 @@ namespace MyBird
         {
             if (mainCamera == null) return;
 
-            // 카메라가 바닥보다 오른쪽으로 지정된 거리(recycleDistance) 이상 진행했다면
+            // 카메라가 바닥보다 오른쪽으로 지정된 거리(recycleDistance) 이상 진행했다면 (앞으로 이동)
             if (mainCamera.position.x - transform.position.x > recycleDistance)
             {
                 // 맨 앞으로 이동 (현재 위치 + 바닥 너비 * 전체 개수)
                 transform.position += new Vector3(tileWidth * totalGroundCount, 0, 0);
+            }
+            // 카메라가 바닥보다 왼쪽으로 지정된 거리(recycleDistance) 이상 진행했다면 (뒤로 이동)
+            else if (transform.position.x - mainCamera.position.x > recycleDistance)
+            {
+                // 맨 뒤로 이동 (현재 위치 - 바닥 너비 * 전체 개수)
+                transform.position -= new Vector3(tileWidth * totalGroundCount, 0, 0);
             }
         }
     }
